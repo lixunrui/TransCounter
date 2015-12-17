@@ -10,9 +10,11 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ITL.Enabler.API;
 
 namespace LXR.Counter
 {
@@ -21,14 +23,32 @@ namespace LXR.Counter
     /// </summary>
     public partial class MainWindow : Window
     {
+        Forecourt _forecourt;
         PointCollection points = new PointCollection();
         public MainWindow()
         {
             InitializeComponent();
         }
 
+        void StartAnimation(String StoryBoardName)
+        {
+            Storyboard currentStoryBoard;
+            try
+            {
+                currentStoryBoard = this.FindResource(StoryBoardName) as Storyboard;
+                currentStoryBoard.Begin(this, false);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Error:" + ex.Message);
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            StartAnimation("show_logon");
+            //reverse.RenderTransform = form;
+
             //const double margin = 10;
             //double xMin = margin;
             //double xMax = canGraph.Width - margin;
@@ -75,6 +95,7 @@ namespace LXR.Counter
           //  LoadData();
         }
 
+#region Item Events        
         private void MenuItem_Logon_Click(object sender, RoutedEventArgs e)
         {
 
@@ -91,6 +112,37 @@ namespace LXR.Counter
         }
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+#endregion
+
+        #region ITL Function Related
+        void Login()
+        {
+            try
+            {
+                _forecourt.Connect(".", 3, "Terminal", "password", true);
+            }
+            catch (System.Exception ex)
+            {
+            }
+            
+
+        }
+        #endregion
+
+        private void Logon_StoryBoard_Completed(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Button_Logon_Clicked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Button_Exit_Clicked(object sender, RoutedEventArgs e)
         {
 
         }
