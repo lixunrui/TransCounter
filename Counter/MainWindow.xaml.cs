@@ -28,8 +28,46 @@ namespace LXR.Counter
         public MainWindow()
         {
             InitializeComponent();
+            InitializeMyComponent();
         }
 
+
+        private void InitializeMyComponent()
+        {
+            _forecourt = new Forecourt();
+
+            _forecourt.OnServerEvent += _forecourt_OnServerEvent;
+            _forecourt.OnConnectAsyncResult += _forecourt_OnConnectAsyncResult;
+        }
+
+        void _forecourt_OnConnectAsyncResult(object sender, ConnectCompletedEventArgs e)
+        {
+            this.Dispatcher.BeginInvoke(
+                (Action)(
+                () =>
+                {
+                    if (e.ConnectResult == ApiResult.Ok)
+                    {
+                        ConnectionSucceed();
+                    }
+                    else
+                    {
+                        ConnectionFailed(e.ConnectResult);
+                    }
+                }
+                )
+                );
+        }
+
+        void _forecourt_OnServerEvent(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Show the logon panel
+        /// </summary>
+        /// <param name="StoryBoardName"></param>
         void StartAnimation(String StoryBoardName)
         {
             Storyboard currentStoryBoard;
@@ -117,20 +155,6 @@ namespace LXR.Counter
         }
 #endregion
 
-        #region ITL Function Related
-        void Login()
-        {
-            try
-            {
-                _forecourt.Connect(".", 3, "Terminal", "password", true);
-            }
-            catch (System.Exception ex)
-            {
-            }
-            
-
-        }
-        #endregion
 
         private void Logon_StoryBoard_Completed(object sender, EventArgs e)
         {
@@ -139,13 +163,34 @@ namespace LXR.Counter
 
         private void Button_Logon_Clicked(object sender, RoutedEventArgs e)
         {
+            try
+            {
 
+                Message.Content = "Connecting...";
+                _forecourt.ConnectAsync(".", 3, "Terminal", "password", true);
+            }
+            catch (System.Exception ex)
+            {
+                Message.Content = "Failed to connect to server";
+            }
         }
 
         private void Button_Exit_Clicked(object sender, RoutedEventArgs e)
         {
-
+            this.Close();
         }
+
+        private void ConnectionSucceed()
+        {
+            LogonPanel.Visibility = Visibility.Hidden;
+        }
+
+        private void ConnectionFailed(ApiResult ConnectResult)
+        {
+            Message.Content = "Failed to connect to server: "+ ConnectResult.ToString();
+        }
+
+     
 
         //void LoadData()
         //{
