@@ -59,9 +59,19 @@ namespace LXR.Counter
                 );
         }
 
+        /// <summary>
+        /// Catch server offline event
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void _forecourt_OnServerEvent(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            this.Dispatcher.BeginInvoke(
+                (Action)(() =>
+                {
+                    Message.Content = String.Format("Server has {0}", _forecourt.IsConnected? "Connected":"Disconnected");
+                })
+                );
         }
 
         /// <summary>
@@ -85,55 +95,9 @@ namespace LXR.Counter
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             StartAnimation("show_logon");
-            //reverse.RenderTransform = form;
-
-            //const double margin = 10;
-            //double xMin = margin;
-            //double xMax = canGraph.Width - margin;
-
-            //double yMin = margin;
-            //double yMax = canGraph.Height - margin;
-
-            //const double step = 5;
-
-            //// make the x axis
-            //GeometryGroup xAxis = new GeometryGroup();
-            //xAxis.Children.Add(new LineGeometry(new Point(0, yMax), new Point(canGraph.Width, yMax)));
-
-            //for (double x = xMin + step; x <= canGraph.Width - step; x+= step )
-            //{
-            //    xAxis.Children.Add(new LineGeometry(new Point(x, yMax - margin/2), new Point(x,yMax + margin/2)));
-            //}
-
-            //Path xAxisPath = new Path();
-            //xAxisPath.StrokeThickness = 1;
-            //xAxisPath.Stroke = Brushes.Black;
-            //xAxisPath.Data = xAxis;
-
-            //canGraph.Children.Add(xAxisPath);
-
-            //// Make the Y ayis.
-            //GeometryGroup yaxis = new GeometryGroup();
-            //yaxis.Children.Add(new LineGeometry(
-            //    new Point(xMin, 0), new Point(xMin, canGraph.Height)));
-            //for (double y = step; y <= canGraph.Height - step; y += step)
-            //{
-            //    yaxis.Children.Add(new LineGeometry(
-            //        new Point(xMin - margin / 2, y),
-            //        new Point(xMin + margin / 2, y)));
-            //}
-
-            //Path yaxis_path = new Path();
-            //yaxis_path.StrokeThickness = 1;
-            //yaxis_path.Stroke = Brushes.Black;
-            //yaxis_path.Data = yaxis;
-
-            //canGraph.Children.Add(yaxis_path);
-
-          //  LoadData();
+            
         }
-
-#region Item Events        
+   
         private void MenuItem_Logon_Click(object sender, RoutedEventArgs e)
         {
 
@@ -153,21 +117,24 @@ namespace LXR.Counter
         {
 
         }
-#endregion
-
 
         private void Logon_StoryBoard_Completed(object sender, EventArgs e)
         {
-
+            this.Dispatcher.BeginInvoke(
+                (Action)(()=>
+                {
+                    Message.Content = "Please insert id and password";
+                }
+                )
+                );
         }
 
         private void Button_Logon_Clicked(object sender, RoutedEventArgs e)
         {
             try
             {
-
                 Message.Content = "Connecting...";
-                _forecourt.ConnectAsync(".", 3, "Terminal", "password", true);
+                _forecourt.ConnectAsync(txt_ServerIP.Text, Convert.ToInt32(txt_TerminalID.Text), "TestTerminal", txt_Password.Text, true);
             }
             catch (System.Exception ex)
             {
@@ -183,6 +150,8 @@ namespace LXR.Counter
         private void ConnectionSucceed()
         {
             LogonPanel.Visibility = Visibility.Hidden;
+            Message.Content = String.Format("Connected to Server {0}", txt_ServerIP.Text);
+            LogonData.SaveData(txt_ServerIP.Text, Convert.ToInt32(txt_TerminalID.Text), txt_Password.Text);
         }
 
         private void ConnectionFailed(ApiResult ConnectResult)
@@ -190,61 +159,8 @@ namespace LXR.Counter
             Message.Content = "Failed to connect to server: "+ ConnectResult.ToString();
         }
 
-     
 
-        //void LoadData()
-        //{
-        //    int index = 10;
-        //    int x = 0;
-         
-        //    do 
-        //    {
-
-        //        Polyline line = new Polyline();
-        //        line.Stroke = Brushes.Red;
-        //        line.StrokeThickness = 1;
-        //        Random r = new Random();
-
-        //        double data = r.Next(100, 400);
-                
-        //        // the data point is (x:index(time), y:data)
-
-        //        if (points.Count > 10)
-        //        {
-        //            points.RemoveAt(0);
-        //        }
-
-        //        points.Add(new Point(index, data));
-        //        x++;
-        //        index+=5;
-
-        //        line.Points = points;
-
-        //        canGraph.Children.Add(line);
-             
-        //    } while (x < 20);
-
-        //    Console.WriteLine();
-        //}
-
-        //private void Button_Click(object sender, RoutedEventArgs e)
-        //{
-        //    double x = Convert.ToDouble(txt_x.Text);
-        //    double y = Convert.ToDouble(txt_y.Text);
-        //    points.Add(new Point(x, y));
-
-        //    Draw();
-        //}
-
-        //void Draw()
-        //{
-        //    Polyline line = new Polyline();
-        //    line.Stroke = Brushes.Red;
-        //    line.StrokeThickness = 1;
-
-        //    line.Points = points;
-
-        //    canGraph.Children.Add(line);
-        //}
+       
+    
     }
 }
