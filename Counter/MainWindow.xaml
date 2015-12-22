@@ -170,10 +170,10 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
+                            <RowDefinition MinHeight="20"/>
+                            <RowDefinition MinHeight="20"/>
+                            <RowDefinition MinHeight="20"/>
+                            <RowDefinition MinHeight="20"/>
                         </Grid.RowDefinitions>
 
                         <Label Grid.Row="0" Grid.Column="0"   Content="Server IP:" 

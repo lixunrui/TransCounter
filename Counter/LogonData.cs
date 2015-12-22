@@ -41,6 +41,11 @@ namespace LXR.Counter
 
             path = Path.Combine(path, fileName);
 
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+
             Dictionary<String, String> DataDir = new Dictionary<String, String>();
             DataDir.Add(Strings.Server, server);
             DataDir.Add(Strings.TerminalID, terminalID.ToString());
@@ -48,7 +53,7 @@ namespace LXR.Counter
             
                 // Save data
                 // Server:127.0.0.1;TerminalID:3;Password:password
-            using (FileStream fileStream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite))
+            using (FileStream fileStream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
             {
                 using (StreamWriter fileWriter = new StreamWriter(fileStream))
                 {
