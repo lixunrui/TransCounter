@@ -33,7 +33,6 @@ namespace LXR.Counter
             InitializeMyComponent();
         }
 
-
         private void InitializeMyComponent()
         {
             _forecourt = new Forecourt();
@@ -41,27 +40,73 @@ namespace LXR.Counter
             _forecourt.OnServerEvent += _forecourt_OnServerEvent;
             _forecourt.OnConnectAsyncResult += _forecourt_OnConnectAsyncResult;
             _forecourt.Pumps.OnTransactionEvent += Pumps_OnTransactionEvent;
-
-            Thread timerThread = new Thread(Count);
-            timerThread.Start();
         }
 
-        void Count()
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            //TODO: Load data from file
+            LogonData.LoadData();
+            txt_ServerIP.Text = LogonData.Server;
+            txt_TerminalID.Text = LogonData.TerminalID.ToString();
+            txt_Password.Text = LogonData.TerminalPassword;
+            ShowLogonPanel();
+
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            _forecourt = null;
+            this.Close();
+        }
+
+        void ShowLogonPanel()
+        {
+            if (_forecourt == null || !_forecourt.IsConnected)
+            {
+                LogonPanel.Visibility = Visibility.Visible;
+                StartAnimation("show_logon");
+            }
+            else
+            {
+                LogonPanel.Visibility = Visibility.Hidden;
+            }
+        }
+
+        /// <summary>
+        /// Show the logon panel
+        /// </summary>
+        /// <param name="StoryBoardName"></param>
+        void StartAnimation(String StoryBoardName)
+        {
+            Storyboard currentStoryBoard;
+            try
+            {
+                currentStoryBoard = this.FindResource(StoryBoardName) as Storyboard;
+                currentStoryBoard.Begin(this, false);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("Error:" + ex.Message);
+            }
+        }
+
+        void StartTimer()
         {
             DateTime now = DateTime.Now;
 
-            while (_forecourt.IsConnected)
+            while (_forecourt != null && _forecourt.IsConnected)
             {
                 DateTime current = DateTime.Now;
                 TimeSpan elapsedSpan = new TimeSpan(current.Ticks - now.Ticks);
-                if (elapsedSpan.Seconds >= 6)
+                Console.WriteLine("Current count {0} on Span {1}", currentTotalTransNum, elapsedSpan.Seconds);
+                if (elapsedSpan.Seconds >= 30)
                 {
                     UpdateNumbers(currentTotalTransNum);
                     Console.WriteLine("Number is {0}", currentTotalTransNum);
                     currentTotalTransNum = 0;
                     now = current;
                 }
-                Thread.Sleep(100);
+                Thread.Sleep(1000);
             }
         }
 
@@ -82,6 +127,8 @@ namespace LXR.Counter
                     if (e.ConnectResult == ApiResult.Ok)
                     {
                         ConnectionSucceed();
+                        Thread timerThread = new Thread(StartTimer);
+                        timerThread.Start();
                     }
                     else
                     {
@@ -114,30 +161,7 @@ namespace LXR.Counter
             
         }
 
-        /// <summary>
-        /// Show the logon panel
-        /// </summary>
-        /// <param name="StoryBoardName"></param>
-        void StartAnimation(String StoryBoardName)
-        {
-            Storyboard currentStoryBoard;
-            try
-            {
-                LogonPanel.Visibility = Visibility.Visible;
-                currentStoryBoard = this.FindResource(StoryBoardName) as Storyboard;
-                currentStoryBoard.Begin(this, false);
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show("Error:" + ex.Message);
-            }
-        }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            StartAnimation("show_logon");
-            
-        }
    
         private void MenuItem_Logon_Click(object sender, RoutedEventArgs e)
         {
@@ -156,7 +180,9 @@ namespace LXR.Counter
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-
+            About about = new About();
+            about.Owner = this;
+            about.ShowDialog();
         }
 
         private void Logon_StoryBoard_Completed(object sender, EventArgs e)
@@ -190,10 +216,16 @@ namespace LXR.Counter
 
         private void ConnectionSucceed()
         {
-            LogonPanel.Visibility = Visibility.Hidden;
+            ShowLogonPanel();
+            ShowTerminalPanel();
             Message.Content = String.Format("Connected to Server {0}", txt_ServerIP.Text);
             LogonData.SaveData(txt_ServerIP.Text, Convert.ToInt32(txt_TerminalID.Text), txt_Password.Text);
             UpdateNumbers();
+        }
+
+        void ShowTerminalPanel()
+        {
+            lbl_Terminal_ID.Content = txt_TerminalID.Text;
         }
 
         void UpdateNumbers(int currentTotalTransNum=0)
@@ -217,8 +249,5 @@ namespace LXR.Counter
             Message.Content = "Failed to connect to server: "+ ConnectResult.ToString();
         }
 
-
-       
-    
     }
 }

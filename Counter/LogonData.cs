@@ -9,30 +9,30 @@ namespace LXR.Counter
 {
     internal static class Strings
     {
-        internal static String Server = @"Server";
-        internal static String TerminalID = @"TerminalID";
-        internal static String TerminalPassword = @"Password";
+        internal const String Server = @"Server";
+        internal const String TerminalID = @"TerminalID";
+        internal const String TerminalPassword = @"Password";
     }
 
     internal static class LogonData
     {
-        //internal String Server { get; set; }
-        //internal Int32 TerminalID { get; set; }
-        //internal String TerminalPassword { get; set; }
+        internal static String Server { get; set; }
+        internal static Int32 TerminalID { get; set; }
+        internal static String TerminalPassword { get; set; }
 
-        static String fileName = @"logonData";
+        static String fileName = @"o_o";
 
         static String GetFilePath()
         {
             String path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().GetName().CodeBase);
             //path = Path.Combine(path, fileName);
+            path = new Uri(path).LocalPath;
             return path;
         }
 
         internal static void SaveData(string server, int terminalID, string password)
         {
             string path = GetFilePath();
-            path = new Uri(path).LocalPath;
             //if (!File.Exists(path))
             //    File.Create(path);
 
@@ -55,6 +55,7 @@ namespace LXR.Counter
                 // Server:127.0.0.1;TerminalID:3;Password:password
             using (FileStream fileStream = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
             {
+                File.SetAttributes(path, FileAttributes.Hidden);
                 using (StreamWriter fileWriter = new StreamWriter(fileStream))
                 {
                     foreach (KeyValuePair<String, String> pair in DataDir)
@@ -63,12 +64,44 @@ namespace LXR.Counter
                     }
                 }
             }
- 
         }
 
         internal static void LoadData()
         {
+            String path = GetFilePath();
 
+            path = Path.Combine(path, fileName);
+            if (!File.Exists(path))
+                return;
+
+            using(FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        String data = reader.ReadLine(); // Data: Value
+                        data = data.Trim();
+                        String[] dataPair = data.Split(':');
+                        if (dataPair.Length == 2)
+                        {
+                            switch (dataPair[0])
+                            {
+                                case Strings.Server:
+                                    Server = dataPair[1];
+                                    break;
+                                case Strings.TerminalID:
+                                    TerminalID = Convert.ToInt32(dataPair[1]);
+                                    break;
+                                case Strings.TerminalPassword:
+                                    TerminalPassword = dataPair[1];
+                                    break;
+                            }
+                        }
+                        
+                    }
+                }
+            }
         }
     }
 }
