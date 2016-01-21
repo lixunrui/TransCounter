@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ITL.Enabler.API;
+using System.Collections.ObjectModel;
 
 namespace LXR.Counter
 {
@@ -23,6 +24,9 @@ namespace LXR.Counter
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        ObservableCollection<KeyValuePair<int, int>> Numbers;
+
         Forecourt _forecourt;
         PointCollection points = new PointCollection();
         int currentTotalTransNum;
@@ -40,6 +44,11 @@ namespace LXR.Counter
             _forecourt.OnServerEvent += _forecourt_OnServerEvent;
             _forecourt.OnConnectAsyncResult += _forecourt_OnConnectAsyncResult;
             _forecourt.Pumps.OnTransactionEvent += Pumps_OnTransactionEvent;
+
+            Numbers = new ObservableCollection<KeyValuePair<int, int>>();
+
+            ToolkitChar.DataContext = Numbers;
+           // ToolkitChar2.DataContext = Numbers;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -92,21 +101,21 @@ namespace LXR.Counter
 
         void StartTimer()
         {
-            DateTime now = DateTime.Now;
+            int min = 0;
 
             while (_forecourt != null && _forecourt.IsConnected)
             {
-                DateTime current = DateTime.Now;
-                TimeSpan elapsedSpan = new TimeSpan(current.Ticks - now.Ticks);
-                Console.WriteLine("Current count {0} on Span {1}", currentTotalTransNum, elapsedSpan.Seconds);
-                if (elapsedSpan.Seconds >= 30)
+                Console.WriteLine("Get trans:{0}", currentTotalTransNum);
+                this.Dispatcher.BeginInvoke((Action)(()=>
                 {
-                    UpdateNumbers(currentTotalTransNum);
-                    Console.WriteLine("Number is {0}", currentTotalTransNum);
+                    Numbers.Add(new KeyValuePair<int, int>(min, currentTotalTransNum));
+                    Console.WriteLine("Reset trans");
                     currentTotalTransNum = 0;
-                    now = current;
-                }
-                Thread.Sleep(1000);
+                    
+                }));
+                Thread.Sleep(6000);
+               // currentTotalTransNum += 3;
+                min++;
             }
         }
 
@@ -115,6 +124,7 @@ namespace LXR.Counter
             if (e.EventType == TransactionEventType.Completed)
             {
                 currentTotalTransNum++;
+                Console.WriteLine("Completed {0}", currentTotalTransNum);
             }
         }
 
@@ -175,7 +185,7 @@ namespace LXR.Counter
 
         private void MenuItem_Exit_Click(object sender, RoutedEventArgs e)
         {
-
+            this.Close();
         }
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
@@ -236,12 +246,11 @@ namespace LXR.Counter
                   (Action)(() =>
                   {
                       Console.WriteLine("Invoking {0}", currentTotalTransNum);
-                      lbl_Tot_Trans_Num.Content = "0";
+                      
                       lbl_Ave_Trans_Num.Content = currentTotalTransNum.ToString();
                   })
                   );
             }
-      
         }
 
         private void ConnectionFailed(ApiResult ConnectResult)
